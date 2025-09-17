@@ -4,17 +4,24 @@
 
 template <class T>
 ArrayList<T>::ArrayList(int initCapacity = 10) {
-    // TODO
+    capacity = (initCapacity > 0) ? initCapacity : 10;
+    data = new T[capacity];
+    count = 0;
 }
 
 template <class T>
 ArrayList<T>::ArrayList(const ArrayList<T>& other) {
-    // TODO
+    capacity = other.capacity;
+    count = other.count;
+    data = new T[capacity];
+    for (int i = 0; i < count; ++i) {
+        data[i] = other.data[i];
+    }
 }   
 
 template <class T>
 ArrayList<T>::~ArrayList() {
-    // TODO
+    delete[] data;
 }
 
 // TODO: implement other methods of ArrayList
@@ -24,7 +31,8 @@ ArrayList<T>::~ArrayList() {
 // ----------------- Iterator of ArrayList Implementation -----------------
 template <class T>
 ArrayList<T>::Iterator::Iterator(ArrayList<T>* pList, int index) {
-    // TODO
+    this->pList = pList;
+    cursor = (index >= 0 && index <= pList->count) ? index : 0;
 }
 
 // TODO: implement other methods of ArrayList::Iterator
@@ -34,12 +42,14 @@ ArrayList<T>::Iterator::Iterator(ArrayList<T>* pList, int index) {
 // ----------------- SinglyLinkedList Implementation -----------------
 template <class T>
 SinglyLinkedList<T>::SinglyLinkedList() {
-    // TODO
-}   
+    head = nullptr;
+    tail = nullptr;
+    count = 0;
+}
 
 template <class T>
 SinglyLinkedList<T>::~SinglyLinkedList() {
-    // TODO
+    clear();
 }   
 
 // TODO: implement other methods of SinglyLinkedList
@@ -49,8 +59,8 @@ SinglyLinkedList<T>::~SinglyLinkedList() {
 // ----------------- Iterator of SinglyLinkedList Implementation -----------------
 template <class T>
 SinglyLinkedList<T>::Iterator::Iterator(Node* node) {
-    // TODO
-}   
+    current = node;
+}
 
 // TODO: implement other methods of SinglyLinkedList::Iterator
 
@@ -59,15 +69,23 @@ SinglyLinkedList<T>::Iterator::Iterator(Node* node) {
 // ----------------- VectorStore Implementation -----------------
 
 VectorStore::VectorStore(int dimension = 512, EmbedFn embeddingFunction = nullptr) {
-    // TODO
+    this->dimension = (dimension > 0) ? dimension : 512;
+    this->embeddingFunction = embeddingFunction;
+    count = 0;
 }
 
 VectorStore::~VectorStore() {
-    // TODO
+    clear();
 }
 
 // TODO: implement other methods of VectorStore
-
+void VectorStore::clear() {
+    for (int i = 0; i < records.size(); ++i) {
+        delete records.get(i)->vector;
+        delete records.get(i);
+    }
+    records.clear();
+}
 
 // Explicit template instantiation for char, string, int, double, float, and Point
 
