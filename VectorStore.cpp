@@ -25,24 +25,23 @@ ArrayList<T>::~ArrayList() {
 }
 
 template <class T>
-void ArrayList<T>::ensureCapacity(int cap) { // thêm explicit overflow protection, do fail test 19
-    if (cap > capacity) {
-        //overflow checks
-        long long newCap = static_cast<long long>(capacity) * 3/2;
-        if (newCap < cap) newCap = cap;
-        if (newCap >INT32_MAX) throw std::overflow_error("Requested capacity too large");
+void ArrayList<T>::ensureCapacity(int cap) { // thêm overflow check do fail test 19
+    if (cap <= capacity) return;
 
-        // now safe to convert
-        int newCapacity=static_cast<int>(newCap);
+    // use hard-coded 32-bit signed max để tránh overflow khi nhân chia
+    const long long MAX_INT32 = 2147483647LL;
+    long long proposed = static_cast<long long>(capacity);
+    // Grow roughly by 1.5x until reaching requirement (single step acceptable here)
+    proposed = proposed + (proposed >> 1); // *1.5
+    if (proposed <cap) proposed = cap; // ensure at least required
+    if (proposed > MAX_INT32) throw std::overflow_error("Requested capacity too large");
 
-        T* newData = new T[newCapacity];
-        for (int i = 0; i < count; ++i) {
-            newData[i] = data[i];
-        }
-        delete[] data;
-        data = newData;
-        capacity = newCapacity;
-    }
+    int newCapacity = static_cast<int>(proposed);
+    T* newData = new T[newCapacity];
+    for (int i = 0; i < count; ++i) newData[i] = data[i];
+    delete[] data;
+    data = newData;
+    capacity = newCapacity;
 }
 
 template <class T>
@@ -302,7 +301,7 @@ SinglyLinkedList<T>::Iterator::Iterator(Node* node) {
 
 // ----------------- VectorStore Implementation -----------------
 
-VectorStore::VectorStore(int dimension = 512, EmbedFn embeddingFunction = nullptr) {
+VectorStore::VectorStore(int dimension, EmbedFn setEmbeddingFunction) {
     this->dimension = (dimension > 0) ? dimension : 512;
     this->embeddingFunction = embeddingFunction;
     count = 0;
