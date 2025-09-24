@@ -35,7 +35,7 @@ public:
     int size() const; // check
     void clear(); // check
     T& get(int index); // check
-    void set(int index, T e); // check
+    void set(int index, T e); //check
     int indexOf(T item) const; // check
     bool contains(T item) const; // check
     string toString(string (*item2str)(T&) = 0) const; // check

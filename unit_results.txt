@@ -1,0 +1,4 @@
+
+BATCH_SUMMARY: passed=0 failed=0 total=0
+TEST_SUMMARY: passed=90 failed=0 total=90
+ASSERT_SUMMARY: passed=280 failed=0 total=280

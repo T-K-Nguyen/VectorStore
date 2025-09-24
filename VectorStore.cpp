@@ -31,11 +31,12 @@ void ArrayList<T>::ensureCapacity(int cap) { // thêm overflow check do fail tes
     // use hard-coded 32-bit signed max để tránh overflow khi nhân chia
     const long long MAX_INT32 = 2147483647LL;
     long long proposed = static_cast<long long>(capacity);
-    // Grow roughly by 1.5x until reaching requirement (single step acceptable here)
+
     proposed = proposed + (proposed >> 1); // *1.5
     if (proposed <cap) proposed = cap; // ensure at least required
-    if (proposed > MAX_INT32) throw std::overflow_error("Requested capacity too large");
+    if (proposed > MAX_INT32) throw std::overflow_error("Requested capacity too large") ;
 
+    // bat dau thay
     int newCapacity = static_cast<int>(proposed);
     T* newData = new T[newCapacity];
     for (int i = 0; i < count; ++i) newData[i] = data[i];
@@ -303,7 +304,8 @@ SinglyLinkedList<T>::Iterator::Iterator(Node* node) {
 
 VectorStore::VectorStore(int dimension, EmbedFn setEmbeddingFunction) {
     this->dimension = (dimension > 0) ? dimension : 512;
-    this->embeddingFunction = embeddingFunction;
+    // Correctly assign the incoming function pointer (previously self-assigned -> left uninitialized)
+    this->embeddingFunction = setEmbeddingFunction;
     count = 0;
 }
 
@@ -359,6 +361,10 @@ int VectorStore::size() const {
 bool VectorStore::empty() const {
     return records.size() == 0;
 }
+
+// ----------------- VectorRecord Implementation -----------------
+VectorStore::VectorRecord::VectorRecord(int id, const string& rawText, SinglyLinkedList<float>* vector)
+    : id(id), rawText(rawText), rawLength(static_cast<int>(rawText.length())), vector(vector) {}
 
 // Explicit template instantiation for char, string, int, double, float, and Point
 
