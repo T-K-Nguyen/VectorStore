@@ -17,31 +17,31 @@ private:
     int capacity;
     int count;
 
-    void ensureCapacity(int cap);
+    void ensureCapacity(int cap); // check
 
 public:
     class Iterator;
     friend class Iterator;
 
-    ArrayList(int initCapacity = 10);
-    ArrayList(const ArrayList<T>& other); //Deep Copy
+    ArrayList(int initCapacity = 10); // check
+    ArrayList(const ArrayList<T>& other); //Deep Copy //check
     ~ArrayList();
-    ArrayList<T>& operator=(const ArrayList<T>& other); //Deep Copy
+    ArrayList<T>& operator=(const ArrayList<T>& other); //Deep Copy //check
 
-    void add(T e);
-    void add(int index, T e);
-    T removeAt(int index);
-    bool empty() const;
-    int size() const;
-    void clear();
-    T& get(int index);
-    void set(int index, T e);
-    int indexOf(T item) const;
-    bool contains(T item) const;
-    string toString(string (*item2str)(T&) = 0) const;
+    void add(T e); // check
+    void add(int index, T e); // check
+    T removeAt(int index); // check
+    bool empty() const; // check
+    int size() const; // check
+    void clear(); // check
+    T& get(int index); // check
+    void set(int index, T e); // check
+    int indexOf(T item) const; // check
+    bool contains(T item) const; // check
+    string toString(string (*item2str)(T&) = 0) const; // check
 
-    Iterator begin();
-    Iterator end();
+    Iterator begin(); // check
+    Iterator end(); // check
 
     // Inner class Iterator
     class Iterator {
@@ -52,14 +52,14 @@ public:
         int cursor;
         ArrayList<T>* pList;
     public:
-        Iterator(ArrayList<T>* pList = nullptr, int index = 0);
-        Iterator& operator=(const Iterator& other); //Deep Copy
-        T& operator*();
-        bool operator!=(const Iterator& other) const;
-        Iterator& operator++();
-        Iterator operator++(int);
-        Iterator& operator--();
-        Iterator operator--(int);
+        Iterator(ArrayList<T>* pList = nullptr, int index = 0); // check
+        Iterator& operator=(const Iterator& other); //Deep Copy // check
+        T& operator*(); // check
+        bool operator!=(const Iterator& other) const; // check
+        Iterator& operator++(); // check
+        Iterator operator++(int); // check
+        Iterator& operator--(); // check
+        Iterator operator--(int); // check
     };
 };
 

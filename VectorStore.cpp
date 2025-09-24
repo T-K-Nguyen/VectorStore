@@ -3,7 +3,7 @@
 // ----------------- ArrayList Implementation -----------------
 
 template <class T>
-ArrayList<T>::ArrayList(int initCapacity = 10) {
+ArrayList<T>::ArrayList(int initCapacity) {
     capacity = (initCapacity > 0) ? initCapacity : 10;
     data = new T[capacity];
     count = 0;
@@ -25,12 +25,18 @@ ArrayList<T>::~ArrayList() {
 }
 
 template <class T>
-void ArrayList<T>::ensureCapacity(int cap) {
+void ArrayList<T>::ensureCapacity(int cap) { // thêm explicit overflow protection, do fail test 19
     if (cap > capacity) {
-        int newCapacity = static_cast<int>(capacity * 1.5); // Increase by 50%
-        if (newCapacity < cap) newCapacity = cap;
+        //overflow checks
+        long long newCap = static_cast<long long>(capacity) * 3/2;
+        if (newCap < cap) newCap = cap;
+        if (newCap >INT32_MAX) throw std::overflow_error("Requested capacity too large");
+
+        // now safe to convert
+        int newCapacity=static_cast<int>(newCap);
+
         T* newData = new T[newCapacity];
-        for (int i = 0; i < count; ++i) { // Copied old data to new one takes O(n)
+        for (int i = 0; i < count; ++i) {
             newData[i] = data[i];
         }
         delete[] data;
@@ -40,16 +46,19 @@ void ArrayList<T>::ensureCapacity(int cap) {
 }
 
 template <class T>
-ArrayList<T>& ArrayList<T>::operator=(const ArrayList<T>& other) {// ham deep copy
-    if (this != &other) {
-        delete[] data;
-        capacity = other.capacity;
-        count = other.count;
-        data = new T[capacity];
-        for (int i = 0; i < count; ++i) {// Copied old data to new one takes O(n)
-            data[i] = other.data[i];
-        }
+ArrayList<T>& ArrayList<T>::operator=(const ArrayList<T>& other) { // thêm exception safety do fail test 31
+    if (this == &other) return *this;
+
+    // thử Allocate trước khi xóa
+    T* newData = new T[other.capacity];
+    for (int i = 0; i < other.count; ++i) {
+        newData[i] = other.data[i];
     }
+    // Now commit.
+    delete[] data;
+    data = newData;
+    capacity = other.capacity;
+    count = other.count;
     return *this;
 }
 
@@ -61,9 +70,8 @@ void ArrayList<T>::add(T e) {
 
 template <class T>
 void ArrayList<T>::add(int index, T e) {
-    if (index < 0 || index > count) {
-        throw std::out_of_range("Index is invalid!");
-    }
+    if (index < 0 || index > count) throw std::out_of_range("Index is out of range!");
+    
     ensureCapacity(count + 1);
     for (int i = count; i > index; --i) {
         data[i] = data[i - 1];
@@ -74,9 +82,8 @@ void ArrayList<T>::add(int index, T e) {
 
 template <class T>
 T ArrayList<T>::removeAt(int index) {
-    if (index < 0 || index >= count) {
-        throw std::out_of_range("Index is invalid!");
-    }
+    if (index < 0 || index >=count) throw std::out_of_range("ArrayList::removeAt - index out of range");
+    
     T element = data[index];
     for (int i = index; i < count - 1; ++i) {
         data[i] = data[i + 1];
@@ -94,18 +101,21 @@ void ArrayList<T>::clear() {
 }
 
 template <class T>
+bool ArrayList<T>::empty() const {
+    return count == 0;
+}
+
+template <class T>
 T& ArrayList<T>::get(int index) {
-    if (index < 0 || index >= count) {
-        throw std::out_of_range("Index is invalid!");
-    }
+    if (index < 0 || index >= count) throw std::out_of_range("ArrayList::get - index out of range");
+    
     return data[index];
 }
 
 template <class T>
 void ArrayList<T>::set(int index, T e) {
-    if (index < 0 || index >= count) {
-        throw std::out_of_range("Index is invalid!");
-    }
+    if (index < 0 || index >= count) throw std::out_of_range("ArrayList::set - index out of range");
+    
     data[index] = e;
 }
 
@@ -125,9 +135,9 @@ bool ArrayList<T>::contains(T item) const {
 }
 
 template <class T>
-string ArrayList<T>::toString(string (*item2str)(T&) = 0) const {
+string ArrayList<T>::toString(string (*item2str)(T&)) const {
     stringstream ss;
-    ss << "[";
+    ss << '[';
     for (int i = 0; i < count; ++i) {
         if (i > 0) ss << ", ";
         if (item2str) {
@@ -136,7 +146,7 @@ string ArrayList<T>::toString(string (*item2str)(T&) = 0) const {
             ss << data[i];
         }
     }
-    ss << "]";
+    ss << ']';
     return ss.str();
 }
 
@@ -149,13 +159,81 @@ int ArrayList<T>::size() const {
 // ----------------- Iterator of ArrayList Implementation -----------------
 template <class T>
 ArrayList<T>::Iterator::Iterator(ArrayList<T>* pList, int index) {
-    this->pList = pList;
-    cursor = (index >= 0 && index <= pList->count) ? index : 0;
+    this->pList = pList; // code của thầy chưa ổn cần thêm kiểm tra index
+    if (pList && (index < 0 || index > pList->count)) throw std::out_of_range("Index is out of range!");
+    
+    cursor = (pList) ? index : 0;
 }
 
 // TODO: implement other methods of ArrayList::Iterator
 
+template <class T>
+typename ArrayList<T>::Iterator ArrayList<T>::begin() {
+    return Iterator(this, 0);
+}
 
+template <class T>
+typename ArrayList<T>::Iterator ArrayList<T>::end() {
+    return Iterator(this, count);
+}
+
+template <class T>
+typename ArrayList<T>::Iterator& ArrayList<T>::Iterator::operator=(const Iterator& other) {
+    if (this != &other) {
+        pList = other.pList;
+        cursor = other.cursor;
+    }
+    return *this;
+}
+
+template <class T>
+T& ArrayList<T>::Iterator::operator*() {
+    if (!pList || cursor < 0 || cursor >= pList->count) 
+        throw std::out_of_range("Iterator is out of range!");
+    
+    return pList->data[cursor];
+}
+
+template <class T>
+bool ArrayList<T>::Iterator::operator!=(const Iterator& other) const {
+    return pList != other.pList || cursor != other.cursor;
+}
+
+template <class T>
+typename ArrayList<T>::Iterator& ArrayList<T>::Iterator::operator++() {
+    if (!pList || cursor >= pList->count) 
+        throw std::out_of_range("Iterator cannot advance past end!");
+    
+    ++cursor;
+    return *this;
+}
+
+template <class T>
+typename ArrayList<T>::Iterator ArrayList<T>::Iterator::operator++(int) {
+    if (!pList || cursor >= pList->count) throw std::out_of_range("Iterator cannot advance past end!");
+    
+    Iterator temp = *this;
+    ++cursor;
+    return temp;
+}
+
+template <class T>
+typename ArrayList<T>::Iterator& ArrayList<T>::Iterator::operator--() {
+    if (!pList || cursor <= 0) throw std::out_of_range("Iterator cannot move before begin!");
+    
+    --cursor;
+    return *this;
+}
+
+template <class T>
+typename ArrayList<T>::Iterator ArrayList<T>::Iterator::operator--(int) {
+    if (!pList || cursor <= 0) 
+        throw std::out_of_range("Iterator cannot move before begin!");
+    
+    Iterator temp = *this;
+    --cursor;
+    return temp;
+}
 
 // ----------------- SinglyLinkedList Implementation -----------------
 template <class T>
@@ -196,9 +274,9 @@ void SinglyLinkedList<T>::add(T e) {
 
 template <class T>
 T& SinglyLinkedList<T>::get(int index) {
-    if (index < 0 || index >= count) {
+    if (index < 0 || index >= count) 
         throw std::out_of_range("Index is invalid!");
-    }
+    
     Node* current = head;
     for (int i = 0; i < index; ++i) {
         current = current->next;
